@@ -12,7 +12,7 @@ function App() {
 	const api = useRef<ExcalidrawImperativeAPI | null>(null);
 
 	const handleChange = async (elements: readonly OrderedExcalidrawElement[], appState: AppState, files: BinaryFiles) => {
-		await invoke("save", { elements, appState, files, readonly: api.current!.getAppState().viewModeEnabled });
+		await invoke("save", { data: { elements, appState, files, readonly: api.current!.getAppState().viewModeEnabled } });
 	};
 
 	const getState = async () => {

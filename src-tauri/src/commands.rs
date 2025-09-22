@@ -1,8 +1,7 @@
 use std::sync::Arc;
 
-use serde_json::{json, Map, Value};
+use serde_json::{Map, Value};
 use tauri::{AppHandle, State, Window};
-use tauri_plugin_store::StoreExt;
 
 use crate::windows::WindowsManager;
 
@@ -10,18 +9,13 @@ use crate::windows::WindowsManager;
 pub fn save(
     app: AppHandle,
     window: Window,
-    elements: Vec<Value>,
-    appState: Value,
-    files: Map<String, Value>,
-    readonly: bool,
+    windows_manager: State<'_, Arc<WindowsManager>>,
+    data: Map<String, Value>,
 ) {
-    let label = window.label();
-    let store = app.store("store.json").unwrap();
-
-    store.set(
-        label,
-        json!({"elements": elements, "appState": appState, "files": files, "readonly": readonly}),
-    );
+    if let Some(window) = windows_manager.get(window.label()) {
+        window.change_state(data);
+        windows_manager.save(&app);
+    }
 }
 #[tauri::command]
 pub fn close(app: AppHandle, window: Window, windows_manager: State<'_, Arc<WindowsManager>>) {
@@ -29,9 +23,14 @@ pub fn close(app: AppHandle, window: Window, windows_manager: State<'_, Arc<Wind
     windows_manager.close(&app, label);
 }
 #[tauri::command]
-pub fn get_state(app: AppHandle, window: Window) -> Option<Value> {
-    let label = window.label();
-    let store = app.store("store.json").unwrap();
+pub fn get_state(
+    window: Window,
+    windows_manager: State<'_, Arc<WindowsManager>>,
+) -> Map<String, Value> {
+    if let Some(window) = windows_manager.get(window.label()) {
+        let state = window.state.lock().unwrap().clone();
+        return state;
+    }
 
-    store.get(label)
+    Map::new()
 }

@@ -915,19 +915,19 @@
   dependencies:
     "@tauri-apps/api" "^2.6.0"
 
-"@tauri-apps/plugin-opener@^2":
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/@tauri-apps/plugin-opener/-/plugin-opener-2.5.0.tgz#f4ed07559065616bf14012686f5273070a39e003"
-  integrity sha512-B0LShOYae4CZjN8leiNDbnfjSrTwoZakqKaWpfoH6nXiJwt6Rgj6RnVIffG3DoJiKsffRhMkjmBV9VeilSb4TA==
-  dependencies:
-    "@tauri-apps/api" "^2.8.0"
-
 "@tauri-apps/plugin-store@^2.4.0":
   version "2.4.0"
   resolved "https://registry.yarnpkg.com/@tauri-apps/plugin-store/-/plugin-store-2.4.0.tgz#925cd626de28895d30a11c33321276cc4a3728ee"
   integrity sha512-PjBnlnH6jyI71MGhrPaxUUCsOzc7WO1mbc4gRhME0m2oxLgCqbksw6JyeKQimuzv4ysdpNO3YbmaY2haf82a3A==
   dependencies:
     "@tauri-apps/api" "^2.8.0"
+
+"@tauri-apps/plugin-updater@~2":
+  version "2.9.0"
+  resolved "https://registry.yarnpkg.com/@tauri-apps/plugin-updater/-/plugin-updater-2.9.0.tgz#ba50b4e644fe19fa6f8465bd86d48119b0d3f41c"
+  integrity sha512-j++sgY8XpeDvzImTrzWA08OqqGqgkNyxczLD7FjNJJx/uXxMZFz5nDcfkyoI/rCjYuj2101Tci/r/HFmOmoxCg==
+  dependencies:
+    "@tauri-apps/api" "^2.6.0"
 
 "@tauri-apps/plugin-window-state@~2":
   version "2.4.0"

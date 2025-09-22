@@ -2,19 +2,23 @@ use std::sync::Arc;
 
 use tauri::{
     menu::{CheckMenuItem, Menu, MenuItem},
-    tray::{TrayIcon, TrayIconBuilder},
-    Manager,
+    tray::TrayIconBuilder,
+    Manager, WindowEvent,
 };
 use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
 
 mod commands;
+mod updater;
 mod windows;
 use commands::*;
+use updater::update;
 use windows::WindowsManager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_single_instance::init(|_, _, _: String| {}))
         .plugin(tauri_plugin_window_state::Builder::new().build())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_autostart::init(
@@ -23,6 +27,11 @@ pub fn run() {
         ))
         .invoke_handler(tauri::generate_handler![save, get_state, close])
         .setup(|app| {
+            let handle = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                update(handle).await.unwrap();
+            });
+
             let windows_manager = Arc::new(WindowsManager::new());
             app.manage(windows_manager.clone());
             windows_manager.load(&app.handle());
@@ -49,7 +58,7 @@ pub fn run() {
                     .menu(&menu)
                     .on_menu_event(move |app, event| match event.id.as_ref() {
                         "add" => {
-                            windows_manager.new_window(app, None);
+                            windows_manager.new_window(app, None, None);
                         }
                         "auto_start" => {
                             let autostart_manager = app.autolaunch();
@@ -69,6 +78,12 @@ pub fn run() {
                     .build(app)?;
                 Ok(())
             }
+        })
+        .on_window_event(|_, event| match event {
+            WindowEvent::CloseRequested { api, .. } => {
+                api.prevent_close();
+            }
+            _ => {}
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
