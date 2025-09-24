@@ -1,0 +1,59 @@
+on:
+    release:
+        types: [published]
+
+jobs:
+    build:
+        runs-on: windows-latest
+        steps:
+            - uses: actions/checkout@v5
+
+            - uses: actions/setup-node@v5
+              with:
+                  node-version: "latest"
+
+            - name: Install deps
+              run: |
+                  npm ci
+                  npm i -g @tauri-apps/cli
+
+            - name: Build app
+              run: npm run tauri build
+              env:
+                  TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+                  TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
+            - name: Get version
+              run: |
+                  $config = Get-Content "src-tauri/tauri.conf.json" | ConvertFrom-Json
+                  Add-Content -Path $env:GITHUB_ENV -Value "VERSION=$($config.version)"
+
+            - name: Rename exe
+              run: |
+                  Copy-Item "src-tauri/target/release/bundle/nsis/notes_${{ env.VERSION }}_x64-setup.exe" "windows-x86_64.exe"
+
+            - name: Read sig file
+              run: |
+                  $sig_content = Get-Content "src-tauri/target/release/bundle/nsis/notes_${{ env.VERSION }}_x64-setup.exe.sig" -Raw
+                  Add-Content -Path $env:GITHUB_ENV -Value "SIG=$($sig_content)"
+
+            - name: Create latest.json
+              run: |
+                  $notes = "${{ github.event.release.body }}"
+                  if ([string]::IsNullOrEmpty($notes)) {
+                      $notes = "New release"
+                  }
+                  $json = @{
+                      version = "${{ env.VERSION }}"
+                      notes = $notes
+                      url = "https://github.com/webshining/notes-app/releases/latest/download/windows-x86_64.exe"
+                      signature = "${{ env.SIG }}"
+                  } | ConvertTo-Json -Compress
+                  Set-Content -Path latest.json -Value $json
+
+            - name: Upload files to release
+              uses: softprops/action-gh-release@v2
+              with:
+                  files: |
+                      windows-x86_64.exe
+                      latest.json
