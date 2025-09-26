@@ -9,24 +9,41 @@ import { TbCheck, TbPencil } from "react-icons/tb";
 
 function App() {
 	const [readOnly, setReadOnly] = useState(false);
+
+	let timeout = useRef<number | undefined>(undefined);
 	const api = useRef<ExcalidrawImperativeAPI | null>(null);
+	let versions = useRef<Map<String, Number>>(new Map());
+
+	const calculateDelta = (elements: readonly OrderedExcalidrawElement[]) => {
+		elements = elements.filter((e) => {
+			const prevVersion = versions.current.get(e.id);
+			return !prevVersion || prevVersion !== e.version;
+		});
+		if (elements.length) elements.forEach((e) => versions.current.set(e.id, e.version));
+
+		return elements;
+	};
 
 	const handleChange = async (elements: readonly OrderedExcalidrawElement[], appState: AppState, files: BinaryFiles) => {
-		await invoke("save", { data: { elements, appState, files, readonly: api.current!.getAppState().viewModeEnabled } });
+		clearTimeout(timeout.current);
+		timeout.current = setTimeout(async () => {
+			(appState as any)["readonly"] = api.current!.getAppState().viewModeEnabled;
+			await invoke("save_state", { state: { elements: elements, state: appState, files } });
+		}, 500);
 	};
 
 	const getState = async () => {
 		const state = await invoke<{
 			elements: readonly OrderedExcalidrawElement[];
-			appState: AppState;
+			state: AppState;
 			files: BinaryFiles;
 			readonly: boolean;
 		} | null>("get_state");
 
 		if (state) {
-			const { readonly, appState, ...rest } = state;
-			setReadOnly(readonly);
-			const { collaborators, ...restState } = appState;
+			const { state: appState, ...rest } = state;
+			setReadOnly((appState as any).readonly || false);
+			const { collaborators, readonly, ...restState } = appState as any;
 
 			return { ...rest, appState: restState };
 		}
@@ -49,15 +66,20 @@ function App() {
 	};
 
 	useEffect(() => {
-		console.log(readOnly);
-		api.current?.updateScene({ appState: { viewModeEnabled: readOnly } });
+		if (!api.current) return;
+		api.current.updateScene({ appState: { viewModeEnabled: readOnly } });
+		handleChange([], api.current.getAppState(), {});
+		console.log("changed");
 	}, [readOnly]);
 
 	return (
 		<div className="content">
 			<div className="title" data-tauri-drag-region />
 			<Excalidraw
-				onChange={handleChange}
+				onChange={(elements, appState, files) => {
+					const delta = calculateDelta(elements);
+					if (delta.length !== 0) handleChange(delta, appState, files);
+				}}
 				excalidrawAPI={(a) => {
 					api.current = a;
 				}}

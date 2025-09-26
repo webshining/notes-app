@@ -6,6 +6,10 @@
     "main"
   ],
   "permissions": [
-    "core:default"
+    "core:default",
+    "log:default",
+    "autostart:default",
+    "window-state:default",
+    "updater:default"
   ]
 }

@@ -8,9 +8,5 @@
   "windows": [
     "main"
   ],
-  "permissions": [
-    "autostart:default",
-    "window-state:default",
-    "updater:default"
-  ]
+  "permissions": []
 }
