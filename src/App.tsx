@@ -12,17 +12,6 @@ function App() {
 
 	let timeout = useRef<number | undefined>(undefined);
 	const api = useRef<ExcalidrawImperativeAPI | null>(null);
-	let versions = useRef<Map<String, Number>>(new Map());
-
-	const calculateDelta = (elements: readonly OrderedExcalidrawElement[]) => {
-		elements = elements.filter((e) => {
-			const prevVersion = versions.current.get(e.id);
-			return !prevVersion || prevVersion !== e.version;
-		});
-		if (elements.length) elements.forEach((e) => versions.current.set(e.id, e.version));
-
-		return elements;
-	};
 
 	const handleChange = async (elements: readonly OrderedExcalidrawElement[], appState: AppState, files: BinaryFiles) => {
 		clearTimeout(timeout.current);
@@ -69,7 +58,6 @@ function App() {
 		if (!api.current) return;
 		api.current.updateScene({ appState: { viewModeEnabled: readOnly } });
 		handleChange([], api.current.getAppState(), {});
-		console.log("changed");
 	}, [readOnly]);
 
 	return (
@@ -77,8 +65,7 @@ function App() {
 			<div className="title" data-tauri-drag-region />
 			<Excalidraw
 				onChange={(elements, appState, files) => {
-					const delta = calculateDelta(elements);
-					if (delta.length !== 0) handleChange(delta, appState, files);
+					handleChange(elements, appState, files);
 				}}
 				excalidrawAPI={(a) => {
 					api.current = a;
