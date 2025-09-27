@@ -1,6 +1,6 @@
 use std::{ sync::{ Arc, RwLock } };
 
-use tauri::{ State, Window };
+use tauri::{ AppHandle, State, Window };
 
 use crate::{ board::BoardData, window::WindowManager };
 
@@ -14,9 +14,9 @@ pub fn save_state(window: Window, windows_manager: State<'_, Arc<RwLock<WindowMa
 }
 
 #[tauri::command]
-pub fn close(window: Window, windows_manager: State<'_, Arc<RwLock<WindowManager>>>) {
+pub fn close(app: AppHandle, window: Window, windows_manager: State<'_, Arc<RwLock<WindowManager>>>) {
 	let mut wm = windows_manager.write().unwrap();
-	wm.close(window.label().into());
+	wm.close(&app, window.label().into());
 }
 
 #[tauri::command]

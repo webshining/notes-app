@@ -51,8 +51,10 @@ impl WindowManager {
 		app.save_window_state(StateFlags::all()).unwrap();
 	}
 
-	pub fn close(&mut self, label: String) {
-		if let Some(window) = self.remove(label) {
+	pub fn close(&mut self, app: &AppHandle, label: String) {
+		if let Some(window) = self.remove(label.clone()) {
+			let store = app.store("store.json").unwrap();
+			store.delete(label);
 			window.close();
 		}
 	}
