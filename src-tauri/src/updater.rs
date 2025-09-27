@@ -1,3 +1,4 @@
+use log::info;
 use tauri_plugin_updater::UpdaterExt;
 
 pub async fn update(app: tauri::AppHandle) -> tauri_plugin_updater::Result<()> {
@@ -7,14 +8,14 @@ pub async fn update(app: tauri::AppHandle) -> tauri_plugin_updater::Result<()> {
 		update.download_and_install(
 			|chunk_length, content_length| {
 				downloaded += chunk_length;
-				println!("downloaded {downloaded} from {content_length:?}");
+				info!("downloaded {downloaded} from {content_length:?}");
 			},
 			|| {
-				println!("download finished");
+				info!("download finished");
 			}
 		).await?;
 
-		println!("update installed");
+		info!("update installed");
 		app.restart();
 	}
 

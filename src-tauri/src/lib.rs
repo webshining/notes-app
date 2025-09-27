@@ -1,5 +1,6 @@
 use std::{ sync::{ Arc, RwLock } };
 
+use log::info;
 use tauri::{ menu::{ CheckMenuItem, Menu, MenuItem }, tray::TrayIconBuilder, Manager, WindowEvent };
 use tauri_plugin_autostart::{ MacosLauncher, ManagerExt };
 
@@ -20,7 +21,12 @@ pub fn run() {
 		.plugin(
 			tauri_plugin_log::Builder
 				::new()
-				.targets([tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Stdout)])
+				.clear_targets()
+				.target(
+					tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::LogDir {
+						file_name: Some("log".into()),
+					})
+				)
 				.build()
 		)
 		.plugin(tauri_plugin_updater::Builder::new().build())
@@ -30,6 +36,7 @@ pub fn run() {
 		.plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, None))
 		.invoke_handler(tauri::generate_handler![save_state, get_state, close])
 		.setup(|app| {
+			info!("test");
 			// --- UPDATE APP ON STARTUP ---
 			{
 				let app = app.handle().clone();
