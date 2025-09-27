@@ -33,7 +33,9 @@ pub fn run() {
 			// --- UPDATE APP ON STARTUP ---
 			{
 				let app = app.handle().clone();
-				tauri::async_runtime::spawn(async move { update(app) });
+				tauri::async_runtime::spawn(async move {
+					update(app).await.unwrap();
+				});
 			}
 
 			// --- SETUP APP ---
